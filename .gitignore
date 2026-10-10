@@ -1,0 +1,23 @@
+# Environment & secrets
+.env
+.env.local
+
+# Dependency directories
+node_modules/
+.dart_tool/
+
+# Build artifacts
+build/
+dist/
+uploads/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
