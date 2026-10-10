@@ -1,0 +1,18 @@
+services:
+  jenkins:
+    build: .
+    container_name: jenkins
+    user: root # classroom/lab: allows Jenkins container to access mounted Docker socket
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+      - "8081:8080" # Jenkins web UI at http://localhost:8081
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jenkins_home:
