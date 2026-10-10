@@ -1,0 +1,131 @@
+services:
+  # Nginx Reverse Proxy (Single public entry point)
+  proxy:
+    build: ./proxy
+    image: circo/proxy:${TAG:-latest}
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - frontend
+      - auth-api
+      - resource-api
+      - realtime-service
+    restart: unless-stopped
+    networks:
+      - circo-net
+
+  # Frontend Web UI
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BUILD_NUMBER: ${TAG:-dev}
+    image: circo/frontend:${TAG:-latest}
+    depends_on:
+      - auth-api
+      - resource-api
+    restart: unless-stopped
+    networks:
+      - circo-net
+
+  # Authentication & Circle Management Microservice
+  auth-api:
+    build:
+      context: ./auth-api
+      target: production
+    image: circo/auth-api:${TAG:-latest}
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-circo}
+      DB_USER: ${DB_USER:-circo_user}
+      DB_PASSWORD: ${DB_PASSWORD:-circo_pass}
+      JWT_SECRET: ${JWT_SECRET:-circle-super-secret-jwt-key-2026}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - circo-net
+
+  # Resources, Documents & Notes Microservice
+  resource-api:
+    build:
+      context: ./resource-api
+      target: production
+    image: circo/resource-api:${TAG:-latest}
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-circo}
+      DB_USER: ${DB_USER:-circo_user}
+      DB_PASSWORD: ${DB_PASSWORD:-circo_pass}
+      JWT_SECRET: ${JWT_SECRET:-circle-super-secret-jwt-key-2026}
+      REALTIME_URL: http://realtime-service:6000
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - upload-data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      realtime-service:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - circo-net
+
+  # WebSockets & Live Notifications Microservice
+  realtime-service:
+    build:
+      context: ./realtime-service
+      target: production
+    image: circo/realtime-service:${TAG:-latest}
+    environment:
+      NODE_ENV: production
+      PORT: 6000
+    restart: unless-stopped
+    networks:
+      - circo-net
+
+  # PostgreSQL Relational Database
+  db:
+    build: ./db
+    image: circo/db:${TAG:-latest}
+    environment:
+      POSTGRES_DB: ${DB_NAME:-circo}
+      POSTGRES_USER: ${DB_USER:-circo_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-circo_pass}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - circo-net
+
+  # Database Management Web GUI (Adminer)
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8082}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - circo-net
+
+volumes:
+  db-data:
+  upload-data:
+
+networks:
+  circo-net:
+    driver: bridge
