@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circo — CircleShare Study Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <!-- Load Socket.io client from reverse proxy -->
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <!-- 1. Dedicated Production Authentication Page (Active when unauthenticated) -->
+  <div class="auth-page-container" id="authPageContainer">
+    <div class="auth-card-wrapper">
+      <div class="auth-brand-header">
+        <div class="auth-glyph-lg">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+          </svg>
+        </div>
+        <h1 class="auth-brand-name">circo</h1>
+        <p class="auth-brand-subtitle">Collaborative Academic Resource Hub & Study Circles</p>
+      </div>
+
+      <div class="auth-card">
+        <!-- Auth Mode Tabs -->
+        <div class="auth-mode-tabs">
+          <button class="auth-mode-tab active" id="authTabSignIn">Sign In</button>
+          <button class="auth-mode-tab" id="authTabSignUp">Create Account</button>
+        </div>
+
+        <!-- Inline Status/Error Banner -->
+        <div class="auth-alert hidden" id="authAlertBanner"></div>
+
+        <!-- Sign In Form -->
+        <form id="authPageLoginForm" class="auth-form-view">
+          <div class="form-group">
+            <label for="pageLoginEmail">Email Address or Username</label>
+            <input type="text" id="pageLoginEmail" placeholder="e.g. johndoe or john@example.com" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="pageLoginPassword">Password</label>
+            <input type="password" id="pageLoginPassword" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary w-100 btn-lg" id="pageLoginSubmitBtn">
+            Sign In to Workspace
+          </button>
+        </form>
+
+        <!-- Create Account Form -->
+        <form id="authPageRegisterForm" class="auth-form-view hidden">
+          <div class="form-group">
+            <label for="pageRegUsername">Username *</label>
+            <input type="text" id="pageRegUsername" placeholder="e.g. johndoe" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="pageRegEmail">Email Address *</label>
+            <input type="email" id="pageRegEmail" placeholder="e.g. john@example.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="pageRegDisplayName">Full Display Name</label>
+            <input type="text" id="pageRegDisplayName" placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label for="pageRegCircleCode">Join Circle via Code (Optional)</label>
+            <input type="text" id="pageRegCircleCode" placeholder="e.g. CIR-892A (optional)" class="code-input">
+          </div>
+          <div class="form-group">
+            <label for="pageRegPassword">Password (at least 6 characters) *</label>
+            <input type="password" id="pageRegPassword" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary w-100 btn-lg" id="pageRegSubmitBtn">
+            Create Account & Enter
+          </button>
+        </form>
+      </div>
+
+      <div class="auth-footer-tag">
+        <span>Circo Systems Architecture · CI/CD Production Environment</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Main Workspace Application (Active when authenticated) -->
+  <div class="app-layout hidden" id="appWorkspace">
+    <!-- Top Minimalist Header -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="brand">
+          <div class="brand-glyph">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+            </svg>
+          </div>
+          <span class="brand-title">circo</span>
+          <span class="brand-badge">finals hub</span>
+        </div>
+
+        <div class="ci-build-chip" id="versionBadgeContainer">
+          <span class="build-dot pulse"></span>
+          <span class="build-label">pipeline</span>
+          <code id="buildNumber">__BUILD_NUMBER__</code>
+        </div>
+      </div>
+
+      <!-- Center: Streamlined Infrastructure Status -->
+      <div class="nav-center">
+        <div class="system-status-pill" id="systemStatusTrigger">
+          <span class="status-dot online"></span>
+          <span class="status-label" id="systemStatusLabel">All Systems Operational</span>
+          <div class="health-dropdown">
+            <div class="dropdown-heading">Container Infrastructure</div>
+            <div class="health-grid">
+              <div class="health-item" id="healthProxy"><span class="indicator-dot"></span> Reverse Proxy (:8080)</div>
+              <div class="health-item" id="healthAuth"><span class="indicator-dot"></span> Auth API (:4000)</div>
+              <div class="health-item" id="healthResource"><span class="indicator-dot"></span> Resource API (:5000)</div>
+              <div class="health-item" id="healthRealtime"><span class="indicator-dot"></span> Realtime (:6000)</div>
+              <div class="health-item" id="healthDb"><span class="indicator-dot"></span> PostgreSQL (:5432)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: User Profile & Log Out Button -->
+      <div class="nav-right">
+        <div class="user-profile-pill" id="userPill">
+          <img id="userAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" alt="Avatar">
+          <div class="user-meta">
+            <span class="user-name" id="userNameDisplay">Alex Rivera</span>
+            <span class="user-circle-tag" id="userCircleDisplay">Tech Circle</span>
+          </div>
+        </div>
+        <button id="logoutBtn" class="btn btn-ghost btn-xs" type="button" title="Sign out of account">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-workspace">
+      <!-- Left Column: Workspace & Circle Settings -->
+      <aside class="sidebar-left">
+        <div class="panel-card">
+          <!-- Workspace Switcher -->
+          <div class="section-heading">
+            <span class="section-title">WORKSPACE</span>
+            <span class="chip-count" id="circleMembersCount">3 members</span>
+          </div>
+
+          <div class="circle-selector-wrapper">
+            <select id="circleSelect" class="minimal-select"></select>
+          </div>
+
+          <div class="circle-meta-block">
+            <h2 class="active-circle-title" id="currentCircleTitle">Tech Circle</h2>
+            <p class="active-circle-desc" id="currentCircleDesc">Academic workspace for Systems Architecture & Integration study group.</p>
+          </div>
+
+          <!-- Minimalist Invite Code Card -->
+          <div class="invite-code-card">
+            <div class="invite-code-header">
+              <span class="invite-label">INVITE CODE</span>
+              <span class="role-badge" id="myCircleRole">ADMIN</span>
+            </div>
+            <div class="invite-code-body">
+              <code class="invite-code-val" id="circleCodeDisplay">TECH-2026</code>
+              <button class="btn-copy-code" id="copyCodeBtn" type="button">Copy</button>
+            </div>
+            <small class="invite-tip">Share with teammates to grant circle access.</small>
+          </div>
+
+          <!-- Actions -->
+          <div class="workspace-action-row">
+            <button class="btn btn-subtle btn-sm flex-1" id="openCreateCircleModalBtn">+ New Circle</button>
+            <button class="btn btn-subtle btn-sm flex-1" id="openJoinCircleModalBtn">Join with Code</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Members List -->
+          <div class="section-heading">
+            <span class="section-title">CIRCLE MEMBERS</span>
+          </div>
+          <div class="members-stream" id="membersList">
+            <!-- Dynamically populated -->
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Center Column: Shared Resources & Documents -->
+      <section class="main-feed-column">
+        <!-- Feed Action Header -->
+        <div class="feed-top-bar">
+          <div class="feed-heading-group">
+            <h1 class="feed-title">Study Resources</h1>
+            <span class="scope-tag">Circle: <strong id="feedCircleScopeName">Tech Circle</strong></span>
+          </div>
+          <button class="btn btn-primary" id="openUploadModalBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Share Resource
+          </button>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="feed-filter-bar">
+          <div class="category-tabs" id="categoryTabs">
+            <button class="tab-btn active" data-cat="All">All</button>
+            <button class="tab-btn" data-cat="Guides">Guides</button>
+            <button class="tab-btn" data-cat="Assignments">Assignments</button>
+            <button class="tab-btn" data-cat="Assets">Assets</button>
+            <button class="tab-btn" data-cat="General">General</button>
+          </div>
+          <div class="search-wrapper">
+            <svg class="search-glyph" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search resources or notes...">
+          </div>
+        </div>
+
+        <!-- Resources Stream -->
+        <div class="resources-feed" id="resourcesFeed">
+          <div class="loading-state">Loading resources...</div>
+        </div>
+      </section>
+
+      <!-- Right Column: Real-time Live Activity Feed -->
+      <aside class="sidebar-right">
+        <div class="panel-card">
+          <div class="section-heading">
+            <span class="section-title">REALTIME FEED</span>
+            <div class="live-status-chip" id="socketStatusIndicator">
+              <span class="live-dot pulse"></span>
+              <span>Live</span>
+            </div>
+          </div>
+
+          <p class="live-subtext">Instant WebSocket notifications on circle activities.</p>
+
+          <div class="activity-stream" id="activityFeed">
+            <div class="activity-item system-item">
+              <span class="activity-time">Just now</span>
+              <p>System initialized. Listening for circle updates...</p>
+            </div>
+          </div>
+
+          <div class="live-footer-action">
+            <button class="btn btn-ghost btn-xs w-100" id="pingSocketBtn">Ping Realtime Server</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Upload Resource Modal -->
+    <div class="modal-overlay" id="uploadModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h3>Share New Resource</h3>
+            <span class="modal-sub">Target: <strong id="uploadTargetCircleName">Tech Circle</strong></span>
+          </div>
+          <button class="modal-close" id="closeUploadModalBtn">&times;</button>
+        </div>
+        <form id="uploadForm">
+          <div class="form-group">
+            <label for="resTitle">Title / Filename *</label>
+            <input type="text" id="resTitle" name="title" placeholder="e.g. Jenkinsfile_Architecture.pdf" required>
+          </div>
+          <div class="form-group">
+            <label for="resCategory">Category</label>
+            <select id="resCategory" name="category">
+              <option value="Guides">Guides</option>
+              <option value="Assignments">Assignments</option>
+              <option value="Assets">Assets</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="resDescription">Description</label>
+            <textarea id="resDescription" name="description" rows="3" placeholder="Brief overview of what this file covers..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="resFile">Attach File (Optional, max 50MB)</label>
+            <input type="file" id="resFile" name="file" class="file-input">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="cancelUploadBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submitUploadBtn">Upload to Circle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Circle Modal -->
+    <div class="modal-overlay" id="createCircleModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h3>Create a New Circle</h3>
+            <span class="modal-sub">Private workspace with unique invite code</span>
+          </div>
+          <button class="modal-close" id="closeCreateCircleModalBtn">&times;</button>
+        </div>
+        <form id="createCircleForm">
+          <div class="form-group">
+            <label for="newCircleName">Circle Name *</label>
+            <input type="text" id="newCircleName" placeholder="e.g. Systems Architecture Study Hub" required>
+          </div>
+          <div class="form-group">
+            <label for="newCircleDesc">Description</label>
+            <textarea id="newCircleDesc" rows="3" placeholder="Explain the focus or purpose of this circle..."></textarea>
+          </div>
+          <p class="form-hint">A unique 4-character invite code (e.g. <code>CIR-XXXX</code>) will be generated automatically.</p>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="cancelCreateCircleBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Circle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Join Circle Modal -->
+    <div class="modal-overlay" id="joinCircleModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h3>Join Circle via Code</h3>
+            <span class="modal-sub">Access study materials and member operations</span>
+          </div>
+          <button class="modal-close" id="closeJoinCircleModalBtn">&times;</button>
+        </div>
+        <form id="joinCircleForm">
+          <div class="form-group">
+            <label for="joinCircleCode">Enter Circle Invite Code *</label>
+            <input type="text" id="joinCircleCode" placeholder="e.g. CIR-892A" required class="code-input">
+          </div>
+          <p class="form-hint">Paste the invite code shared by a member. Circle resources are strictly scoped to verified members.</p>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="cancelJoinCircleBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Join Circle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Minimalist Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span>Circo Collaborative Platform</span>
+        <span class="footer-sep">·</span>
+        <span>Systems Architecture & Integration Finals</span>
+        <span class="footer-sep">·</span>
+        <span class="footer-build-tag">Release <code id="footerBuildTag">__BUILD_NUMBER__</code></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
