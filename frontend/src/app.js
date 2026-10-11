@@ -172,10 +172,16 @@ async function fetchHealthChecks() {
 function initSocketIO() {
   try {
     if (typeof io !== 'undefined') {
+      if (state.socket) {
+        if (state.socket.connected) return;
+        state.socket.disconnect();
+      }
       state.socket = io({
         path: '/socket.io',
-        reconnectionAttempts: 3,
-        timeout: 2500,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 10000,
       });
 
       state.socket.on('connect', () => {
