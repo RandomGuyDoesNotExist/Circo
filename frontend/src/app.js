@@ -134,7 +134,10 @@ async function fetchHealthChecks() {
     if (!el) return;
     const dot = el.querySelector('.indicator-dot');
     try {
-      const res = await fetch(url, { cache: 'no-store' });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      clearTimeout(timer);
       if (res.ok) {
         if (dot) dot.className = 'indicator-dot online';
       } else {
@@ -171,8 +174,8 @@ function initSocketIO() {
     if (typeof io !== 'undefined') {
       state.socket = io({
         path: '/socket.io',
-        reconnectionAttempts: 5,
-        timeout: 5000,
+        reconnectionAttempts: 3,
+        timeout: 2500,
       });
 
       state.socket.on('connect', () => {
@@ -192,6 +195,12 @@ function initSocketIO() {
           state.socket.emit('join_circle', state.activeCircle.id);
         }
         addActivityItem('Connected to real-time notification engine.');
+      });
+
+      state.socket.on('connect_error', () => {
+        if (socketStatusIndicator) {
+          socketStatusIndicator.innerHTML = '<span class="live-dot" style="background:#ef4444;"></span><span>Offline</span>';
+        }
       });
 
       state.socket.on('disconnect', () => {

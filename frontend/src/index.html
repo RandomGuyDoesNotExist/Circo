@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
-  <!-- Load Socket.io client from reverse proxy -->
-  <script src="/socket.io/socket.io.js"></script>
+  <!-- Load Socket.io client locally to prevent blocking if realtime-service is offline -->
+  <script src="socket.io.min.js"></script>
 </head>
 <body>
   <!-- 1. Dedicated Production Authentication Page (Active when unauthenticated) -->
