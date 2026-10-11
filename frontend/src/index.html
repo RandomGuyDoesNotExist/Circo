@@ -1,30 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Circo — CircleShare Study Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
   <!-- Load Socket.io client locally to prevent blocking if realtime-service is offline -->
   <script src="socket.io.min.js"></script>
 </head>
+
 <body>
   <!-- 1. Dedicated Production Authentication Page (Active when unauthenticated) -->
   <div class="auth-page-container" id="authPageContainer">
     <div class="auth-card-wrapper">
       <div class="auth-brand-header">
         <div class="auth-glyph-lg">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="9"></circle>
             <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
           </svg>
         </div>
-        <h1 class="auth-brand-name">circo</h1>
+        <h1 class="auth-brand-name">circol</h1>
         <p class="auth-brand-subtitle">Collaborative Academic Resource Hub & Study Circles</p>
       </div>
 
@@ -42,11 +47,13 @@
         <form id="authPageLoginForm" class="auth-form-view">
           <div class="form-group">
             <label for="pageLoginEmail">Email Address or Username</label>
-            <input type="text" id="pageLoginEmail" placeholder="e.g. johndoe or john@example.com" required autocomplete="username">
+            <input type="text" id="pageLoginEmail" placeholder="e.g. johndoe or john@example.com" required
+              autocomplete="username">
           </div>
           <div class="form-group">
             <label for="pageLoginPassword">Password</label>
-            <input type="password" id="pageLoginPassword" placeholder="••••••••" required autocomplete="current-password">
+            <input type="password" id="pageLoginPassword" placeholder="••••••••" required
+              autocomplete="current-password">
           </div>
           <button type="submit" class="btn btn-primary w-100 btn-lg" id="pageLoginSubmitBtn">
             Sign In to Workspace
@@ -94,7 +101,8 @@
       <div class="nav-left">
         <div class="brand">
           <div class="brand-glyph">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="9"></circle>
               <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
             </svg>
@@ -120,7 +128,8 @@
             <div class="health-grid">
               <div class="health-item" id="healthProxy"><span class="indicator-dot"></span> Reverse Proxy (:8080)</div>
               <div class="health-item" id="healthAuth"><span class="indicator-dot"></span> Auth API (:4000)</div>
-              <div class="health-item" id="healthResource"><span class="indicator-dot"></span> Resource API (:5000)</div>
+              <div class="health-item" id="healthResource"><span class="indicator-dot"></span> Resource API (:5000)
+              </div>
               <div class="health-item" id="healthRealtime"><span class="indicator-dot"></span> Realtime (:6000)</div>
               <div class="health-item" id="healthDb"><span class="indicator-dot"></span> PostgreSQL (:5432)</div>
             </div>
@@ -158,7 +167,8 @@
 
           <div class="circle-meta-block">
             <h2 class="active-circle-title" id="currentCircleTitle">Tech Circle</h2>
-            <p class="active-circle-desc" id="currentCircleDesc">Academic workspace for Systems Architecture & Integration study group.</p>
+            <p class="active-circle-desc" id="currentCircleDesc">Academic workspace for Systems Architecture &
+              Integration study group.</p>
           </div>
 
           <!-- Minimalist Invite Code Card -->
@@ -202,7 +212,8 @@
             <span class="scope-tag">Circle: <strong id="feedCircleScopeName">Tech Circle</strong></span>
           </div>
           <button class="btn btn-primary" id="openUploadModalBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -220,7 +231,8 @@
             <button class="tab-btn" data-cat="General">General</button>
           </div>
           <div class="search-wrapper">
-            <svg class="search-glyph" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="search-glyph" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
@@ -287,7 +299,8 @@
           </div>
           <div class="form-group">
             <label for="resDescription">Description</label>
-            <textarea id="resDescription" name="description" rows="3" placeholder="Brief overview of what this file covers..."></textarea>
+            <textarea id="resDescription" name="description" rows="3"
+              placeholder="Brief overview of what this file covers..."></textarea>
           </div>
           <div class="form-group">
             <label for="resFile">Attach File (Optional, max 50MB)</label>
@@ -318,9 +331,11 @@
           </div>
           <div class="form-group">
             <label for="newCircleDesc">Description</label>
-            <textarea id="newCircleDesc" rows="3" placeholder="Explain the focus or purpose of this circle..."></textarea>
+            <textarea id="newCircleDesc" rows="3"
+              placeholder="Explain the focus or purpose of this circle..."></textarea>
           </div>
-          <p class="form-hint">A unique 4-character invite code (e.g. <code>CIR-XXXX</code>) will be generated automatically.</p>
+          <p class="form-hint">A unique 4-character invite code (e.g. <code>CIR-XXXX</code>) will be generated
+            automatically.</p>
           <div class="modal-footer">
             <button type="button" class="btn btn-ghost" id="cancelCreateCircleBtn">Cancel</button>
             <button type="submit" class="btn btn-primary">Create Circle</button>
@@ -344,7 +359,8 @@
             <label for="joinCircleCode">Enter Circle Invite Code *</label>
             <input type="text" id="joinCircleCode" placeholder="e.g. CIR-892A" required class="code-input">
           </div>
-          <p class="form-hint">Paste the invite code shared by a member. Circle resources are strictly scoped to verified members.</p>
+          <p class="form-hint">Paste the invite code shared by a member. Circle resources are strictly scoped to
+            verified members.</p>
           <div class="modal-footer">
             <button type="button" class="btn btn-ghost" id="cancelJoinCircleBtn">Cancel</button>
             <button type="submit" class="btn btn-primary">Join Circle</button>
@@ -367,4 +383,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
