@@ -52,6 +52,7 @@ const copyCodeBtn = document.getElementById('copyCodeBtn');
 const circleSelect = document.getElementById('circleSelect');
 const feedCircleScopeName = document.getElementById('feedCircleScopeName');
 const uploadTargetCircleName = document.getElementById('uploadTargetCircleName');
+const inviteCodeCard = document.getElementById('inviteCodeCard');
 
 // Modals
 const uploadModal = document.getElementById('uploadModal');
@@ -116,7 +117,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderUserInfo() {
   if (state.user) {
     if (userNameDisplay) userNameDisplay.textContent = state.user.display_name || state.user.username;
-    if (userCircleDisplay) userCircleDisplay.textContent = state.user.circle_name || (state.activeCircle ? state.activeCircle.name : 'Tech Circle');
+    if (userCircleDisplay) {
+      userCircleDisplay.textContent = (state.activeCircle && state.activeCircle.name)
+        ? state.activeCircle.name
+        : (state.myCircles && state.myCircles.length > 0 ? state.myCircles[0].name : (state.user.circle_name || 'No Circle'));
+    }
     if (userAvatar) userAvatar.src = state.user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${state.user.username}`;
   }
 }
@@ -258,6 +263,8 @@ async function fetchActiveCircle() {
       if (feedCircleScopeName) feedCircleScopeName.textContent = circle.name;
       if (uploadTargetCircleName) uploadTargetCircleName.textContent = circle.name;
       if (userCircleDisplay) userCircleDisplay.textContent = circle.name;
+      if (inviteCodeCard) inviteCodeCard.style.display = '';
+      if (openUploadModalBtn) openUploadModalBtn.style.display = '';
 
       // Determine user role in this circle
       const currentUserMember = (circle.members || []).find(m => state.user && (m.id === state.user.id || m.username === state.user.username));
@@ -283,6 +290,8 @@ async function fetchActiveCircle() {
       if (feedCircleScopeName) feedCircleScopeName.textContent = 'None';
       if (uploadTargetCircleName) uploadTargetCircleName.textContent = 'None';
       if (userCircleDisplay) userCircleDisplay.textContent = 'No Circle';
+      if (inviteCodeCard) inviteCodeCard.style.display = 'none';
+      if (openUploadModalBtn) openUploadModalBtn.style.display = 'none';
       state.members = [];
       renderMembers();
     }
@@ -366,6 +375,10 @@ async function switchCircle(targetCircleId) {
 // Render Circle Members in sidebar
 function renderMembers() {
   if (!membersList) return;
+  if (!state.members || state.members.length === 0) {
+    membersList.innerHTML = `<div style="color: #64748b; font-size: 0.82rem; padding: 0.5rem 0;">No circle members to display.</div>`;
+    return;
+  }
   membersList.innerHTML = state.members.map(m => `
     <div class="member-row">
       <img src="${m.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.username}`}" alt="${escapeHtml(m.display_name)}">
@@ -701,7 +714,7 @@ function setupEventListeners() {
   if (copyCodeBtn) {
     copyCodeBtn.addEventListener('click', () => {
       const code = circleCodeDisplay ? circleCodeDisplay.textContent.trim() : '';
-      if (!code) return;
+      if (!code || code === '—') return;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(code).then(() => {
