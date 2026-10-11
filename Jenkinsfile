@@ -48,16 +48,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo "Deploying containerized application stack..."
-                script {
-                    // Try to load credentials from Jenkins Secret File; fallback if local
-                    try {
-                        withCredentials([file(credentialsId: 'circo-env', variable: 'ENV_FILE')]) {
-                            sh 'cp "$ENV_FILE" .env'
-                        }
-                    } catch (Exception e) {
-                        echo "Jenkins credential 'circo-env' not configured. Using .env.example fallback for demo."
-                        sh 'if [ ! -f .env ]; then cp .env.example .env; fi'
-                    }
+                // Securely inject environment configuration from Jenkins Credentials (no repository secrets)
+                withCredentials([file(credentialsId: 'circo-env', variable: 'ENV_FILE')]) {
+                    sh 'cp "$ENV_FILE" .env'
                 }
                 // Zero-downtime container swap using pre-built images
                 sh 'docker compose up -d --no-build --remove-orphans'
